@@ -1,18 +1,36 @@
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const path = require('path');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
-app.use(cors());
-app.use(bodyParser.json({ limit: '1mb' }));
-app.use(express.static(path.join(__dirname, '../client')));
 
+// ✅ Middleware
+app.use(express.json({ limit: '1mb' }));
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"]
+}));
+
+// ✅ Health check route
+app.get('/', (req, res) => {
+  res.send("✅ Server is running");
+});
+
+// ✅ ENV validation (VERY IMPORTANT)
+if (!process.env.GEMINI_API_KEY) {
+  console.error("❌ GEMINI_API_KEY is missing");
+  process.exit(1);
+}
+
+// ✅ Gemini setup (safe model)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+// ✅ Questions
 const QUESTIONS = [
   "Tell me about yourself.",
   "What are your strengths?",
@@ -21,27 +39,30 @@ const QUESTIONS = [
   "Where do you see yourself in 5 years?"
 ];
 
-// Extract first JSON object/array from a string
+// ✅ Extract JSON safely
 function extractJSON(text) {
   if (!text) return null;
-  // Try object
+
   const objStart = text.indexOf('{');
   const objEnd = text.lastIndexOf('}');
   if (objStart !== -1 && objEnd !== -1 && objEnd > objStart) {
     const chunk = text.slice(objStart, objEnd + 1);
-    try { return JSON.parse(chunk); } catch {}
+    try { return JSON.parse(chunk); } 
+    catch (e) { console.error("JSON parse error:", e); }
   }
-  // Try array
+
   const arrStart = text.indexOf('[');
   const arrEnd = text.lastIndexOf(']');
   if (arrStart !== -1 && arrEnd !== -1 && arrEnd > arrStart) {
     const chunk = text.slice(arrStart, arrEnd + 1);
-    try { return JSON.parse(chunk); } catch {}
+    try { return JSON.parse(chunk); } 
+    catch (e) { console.error("JSON parse error:", e); }
   }
+
   return null;
 }
 
-// Safer prompt: JSON only and schema reminder
+// ✅ Prompt builders
 function buildEvaluatePrompt(question, answer) {
   return `
 You are an experienced interviewer. Evaluate strictly and fairly.
@@ -49,7 +70,7 @@ You are an experienced interviewer. Evaluate strictly and fairly.
 Question: "${question}"
 Answer: "${answer}"
 
-Return JSON ONLY, no explanations, matching this schema:
+Return JSON ONLY, no explanations:
 {
   "score": 0,
   "feedback": "string",
@@ -66,37 +87,42 @@ You are a career coach. Based on these interview sessions, produce a concise sum
 Sessions:
 ${JSON.stringify(sessions, null, 2)}
 
-Return JSON ONLY, matching this schema:
+Return JSON ONLY:
 {
   "summary": "string",
-  "strengths": ["string", "string"],
-  "improvements": ["string", "string"],
+  "strengths": ["string"],
+  "improvements": ["string"],
   "plan": [
-    { "day": 1, "focus": "string", "tasks": ["string","string"] },
-    { "day": 2, "focus": "string", "tasks": ["string","string"] },
-    { "day": 3, "focus": "string", "tasks": ["string","string"] },
-    { "day": 4, "focus": "string", "tasks": ["string","string"] },
-    { "day": 5, "focus": "string", "tasks": ["string","string"] },
-    { "day": 6, "focus": "string", "tasks": ["string","string"] },
-    { "day": 7, "focus": "string", "tasks": ["string","string"] }
+    { "day": 1, "focus": "string", "tasks": ["string"] },
+    { "day": 2, "focus": "string", "tasks": ["string"] },
+    { "day": 3, "focus": "string", "tasks": ["string"] },
+    { "day": 4, "focus": "string", "tasks": ["string"] },
+    { "day": 5, "focus": "string", "tasks": ["string"] },
+    { "day": 6, "focus": "string", "tasks": ["string"] },
+    { "day": 7, "focus": "string", "tasks": ["string"] }
   ]
 }
   `.trim();
 }
 
-// Evaluate endpoint
+// ✅ Evaluate API
 app.post('/evaluate', async (req, res) => {
   const { question, answer } = req.body;
+
   if (!question || !answer) {
     return res.status(400).json({ error: "Missing question or answer" });
   }
 
   try {
-    const result = await model.generateContent(buildEvaluatePrompt(question, answer));
+    const result = await model.generateContent(
+      buildEvaluatePrompt(question, answer)
+    );
+
     const raw = result.response?.text() || "";
-    console.log("Evaluate raw:", raw); // See what Gemini returned
+    console.log("Evaluate raw:", raw);
 
     const data = extractJSON(raw);
+
     if (!data || typeof data.score !== 'number') {
       return res.status(500).json({ error: "Invalid AI response", raw });
     }
@@ -107,42 +133,64 @@ app.post('/evaluate', async (req, res) => {
       tips: data.tips,
       rubric: data.rubric
     });
+
   } catch (err) {
     console.error("Gemini evaluate error:", err);
-    res.status(500).json({ error: "Gemini evaluation failed" });
+
+    res.status(500).json({
+      error: "Gemini evaluation failed",
+      details: err.message
+    });
   }
 });
 
-// Summary endpoint
+// ✅ Summary API
 app.post('/summary', async (req, res) => {
   const { sessions } = req.body;
+
   if (!Array.isArray(sessions) || sessions.length === 0) {
     return res.status(400).json({ error: "sessions array required" });
   }
 
   try {
-    const result = await model.generateContent(buildSummaryPrompt(sessions));
+    const result = await model.generateContent(
+      buildSummaryPrompt(sessions)
+    );
+
     const raw = result.response?.text() || "";
     console.log("Summary raw:", raw);
 
     const data = extractJSON(raw);
+
     if (!data || !Array.isArray(data.plan) || data.plan.length !== 7) {
       return res.status(500).json({ error: "Invalid AI response", raw });
     }
 
     res.json(data);
+
   } catch (err) {
     console.error("Gemini summary error:", err);
-    res.status(500).json({ error: "Gemini summary failed" });
+
+    res.status(500).json({
+      error: "Gemini summary failed",
+      details: err.message
+    });
   }
 });
 
+// ✅ Questions API
 app.get('/questions', (req, res) => {
   res.json({ questions: QUESTIONS });
 });
 
+// ✅ Static files (only in production)
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, '../client')));
+}
+
+// ✅ Start server
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`CampusCoach server running at http://localhost:${PORT}`);
-  console.log(`Open http://localhost:${PORT}/index.html`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
