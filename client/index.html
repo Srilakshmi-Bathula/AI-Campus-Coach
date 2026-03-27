@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CampusCoach</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>CampusCoach 👋</h1>
+    <p class="subtitle">AI Mock Interview Assistant</p>
+
+    <div id="greeting" class="card">
+      <p>Welcome! We’ll run a short mock interview with 5 questions.</p>
+      <button id="startBtn" class="btn">Start Interview</button>
+    </div>
+
+    <div id="interview" class="card hidden">
+      <div class="progress">
+        <span id="progressText">Question 1 of 5</span>
+      </div>
+      <h2 id="questionText"></h2>
+      <textarea id="answerInput" rows="6" placeholder="Type your answer..."></textarea>
+      <button id="submitBtn" class="btn">Submit Answer</button>
+
+      <div id="evaluation" class="evaluation hidden">
+        <p><strong>Score:</strong> <span id="scoreText"></span>/10</p>
+        <p><strong>Feedback:</strong> <span id="feedbackText"></span></p>
+        <p><strong>Tips:</strong> <span id="tipsText"></span></p>
+        <p class="rubric"><strong>Reason:</strong> <span id="rubricText"></span></p>
+        <button id="nextBtn" class="btn btn-secondary">Next Question</button>
+      </div>
+    </div>
+
+    <div id="final" class="card hidden">
+      <h2>Final Summary</h2>
+      <p id="summaryText"></p>
+      <h3>Strengths</h3>
+      <ul id="strengthsList"></ul>
+      <h3>Areas to improve</h3>
+      <ul id="improvementsList"></ul>
+      <h3>7-Day Practice Plan</h3>
+      <div id="planContainer"></div>
+      <button id="restartBtn" class="btn">Restart</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
