@@ -1,56 +1,56 @@
-# 🤖 AI Campus Coach
+# 🎓 AI Campus Coach
 
-AI Campus Coach is a simple tool I built to help students prepare for interviews more effectively. It asks interview-style questions, evaluates responses, and provides feedback to improve performance.
+An AI-powered interview practice system that uses Natural Language Processing and evaluation algorithms to assess student responses and generate personalized feedback.
 
----
+## 🚀 What It Does
 
-## 🚀 About the Project
-Preparing for interviews can be challenging without proper guidance or feedback. I created this project to simulate an interview experience where users can practice answering questions and understand how to improve.
-
----
-
-## ✨ Features
-- 🎯 Asks domain-specific interview questions  
-- 📊 Evaluates user answers and assigns a score  
-- ❌ Highlights mistakes and weak areas  
-- 💡 Suggests improvements for better answers  
-- 🧠 Helps build confidence before real interviews  
-
----
+1. User opens the web app
+2. NLP-powered engine generates 5 domain-specific interview questions
+3. User submits their answers
+4. System evaluates responses using scoring algorithms and gives:
+   → A score out of 10
+   → Error analysis and knowledge gap identification
+   → Step-by-step improvement plan
+   → AI-generated model answer for comparison
 
 ## 🛠️ Tech Stack
-- Python  
-- APIs (AI-based evaluation)  
 
----
+- Python — backend logic, API integration and evaluation pipeline
+- HTML & CSS — frontend interface
+- OpenAI API — NLP-based question generation and response evaluation
+- Prompt Engineering — custom prompts to control question difficulty and feedback quality
 
-## ⚙️ How It Works
-1. User answers interview-style questions  
-2. The system analyzes the response  
-3. A score is generated based on quality  
-4. Feedback is provided with improvements  
+## 💡 Key Features
 
----
+- NLP-based interview question generation
+- Automated response scoring using evaluation logic
+- Knowledge gap detection and error analysis
+- Personalized improvement plan per answer
+- AI-generated model answers for self-learning
+- Clean web interface for smooth user experience
 
-## 💡 What I Learned
-- Designing evaluation logic for user responses  
-- Working with AI APIs for analysis and feedback  
-- Building systems that simulate real-world scenarios  
+## 🔍 ML & AI Concepts Used
 
----
+- Natural Language Processing (NLP)
+- Prompt Engineering
+- Automated Evaluation Logic
+- Scoring Algorithms
+- AI-based Feedback Generation
 
-## 📈 Future Improvements
-- Add more domains and question sets  
-- Improve evaluation accuracy  
-- Add a user interface  
-- Track user progress over time  
+## 🎯 Purpose
 
----
+Built to help engineering students identify weak areas, analyze response quality, and improve interview performance using AI-driven evaluation pipelines.
 
-## 🎯 Goal
-I built this project to help students practice interviews with confidence and get structured feedback to improve.
+## ⚠️ Note
 
----
+Never share or commit your API key publicly. Use environment variables to keep it secure.
 
-## ⭐ Support
-If you found this useful, consider giving it a star ⭐
+## 🔑 Setup Instructions
+
+1. Clone this repository
+2. Install dependencies
+   pip install openai
+3. Add your OpenAI API key
+   OPENAI_API_KEY=your_api_key_here
+4. Run the app
+   python app.py
